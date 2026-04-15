@@ -1,46 +1,198 @@
-# Terrain Mapping Using Drone Footage and Image Stitching
+# Drone-Based Terrain Mapping using Image Processing
 
-This project focuses on generating a panoramic terrain map by stitching aerial video footage captured using a semi-autonomous hexa-copter equipped with a camera. The stitched panoramic image provides a clear and continuous view of the terrain, enabling accurate analysis and mapping.
+Autonomous drone system for terrain surveying and panoramic map generation using SIFT-based image stitching on footage captured during semi-autonomous flight missions.
 
-## Project Overview
-A hexa-copter integrated with a flight controller and camera is used to collect aerial footage along a predefined flight path. The captured video is processed to extract overlapping frames, which are then stitched together to form a single panoramic image of the terrain.
+**B.Tech Final Year Project — Electronics and Communication Engineering**
+**MS Ramaiah University of Applied Sciences, Bengaluru (2021)**
 
-The primary goal is to identify and merge similar regions from consecutive frames to create a seamless terrain map.
+---
 
-## Hardware and Software Setup
-- **Drone:** Semi-autonomous hexa-copter  
-- **Flight Controller:** PIXHAWK PX4  
-- **Sensors:** Gyroscope, accelerometer, magnetometer, barometer  
-- **Configuration Software:** Mission Planner (open-source)  
-- **Input Data:** Aerial video footage captured during flight  
+## Overview
 
-## Methodology
-- Convert aerial video footage into image frames
-- Identify overlapping regions between consecutive frames
-- Stitch images to generate a panoramic terrain view
-- Perform terrain analysis based on the stitched output
+Traditional land surveys require physical presence, significant time, and labour-intensive processes. This project addresses that by building a drone system capable of semi-autonomous flight along pre-planned waypoints, capturing high-resolution footage, and stitching the video frames into a continuous panoramic terrain map using computer vision.
 
-## Image Stitching Technique
-The project uses the **Scale-Invariant Feature Transform (SIFT)** algorithm to identify and match key points between overlapping images.
+The system integrates custom drone hardware with Pixhawk PX4 flight control, GPS-guided waypoint navigation via Q Ground Control, and a Python-based image processing pipeline using SIFT and FLANN algorithms to produce bird's-eye-view terrain maps.
 
-### Working Algorithm (SIFT)
-- Detect scale-invariant key points using Difference of Gaussians (DoG), an approximation of Laplacian of Gaussian (LoG)
-- Locate extrema across scale and spatial dimensions
-- Refine key point localization using Taylor series expansion and Hessian matrix
-- Eliminate edge responses to improve accuracy
-- Compute local image gradients around each key point
-- Match key points between images using nearest-neighbor matching
-- Align and stitch images using homography (H-matrix)
+---
+
+## System Architecture
+
+```
+Base Station (Q Ground Control)
+        │
+        │  Telemetry (433 MHz)
+        ▼
+Drone Deployment
+  ├── Pixhawk PX4 Flight Controller
+  ├── UBlox GPS Module
+  ├── 6× Brushless DC Motors (1000 kV)
+  ├── 6× Electronic Speed Controllers (ESC)
+  └── SJ Camera (1080p @ 60fps / 4K @ 25fps)
+        │
+        ▼
+Pre-programmed Flight Path Execution
+        │
+        ▼
+Footage Capture Over Target Terrain
+        │
+        ▼
+Drone Returns to Base Station
+        │
+        ▼
+Image Processing Pipeline (Python + OpenCV)
+  ├── Frame extraction from video
+  ├── SIFT — keypoint and descriptor detection
+  ├── FLANN — feature matching between frames
+  ├── Homography estimation
+  └── Perspective warp and image stitching
+        │
+        ▼
+Panoramic Terrain Map Output
+```
+
+---
+
+## Hardware Components
+
+| Component | Specification | Cost (INR) |
+|---|---|---|
+| Brushless DC Motors × 6 | 1000 kV rating | 2,400 |
+| FSi-6 Transmitter and Receiver | RC control system | 4,000 |
+| Propellers | — | 360 |
+| LiPo Battery and Charger | — | 4,200 |
+| UBlox GPS Module | Theoretical accuracy positioning | 2,000 |
+| Electronic Speed Controllers × 6 | Motor speed regulation | 2,400 |
+| Drone Frame | Lightweight high-grade plastic chassis | 1,800 |
+| 3DR Telemetry Kit | 433 MHz RF communication | 2,200 |
+| Power Distribution Module | Structural + power routing | 1,200 |
+| Pixhawk PX4 Flight Controller | IMU, barometer, magnetometer, gyroscope | 4,500 |
+| **Total** | | **25,060** |
+
+---
+
+## Flight Control System
+
+The drone is controlled by a **Pixhawk PX4** flight controller — an open-source autopilot system equipped with:
+- 3-axis gyroscope and accelerometer
+- Magnetometer and barometer
+- USB, UART, I2C, and PWM interfaces
+
+**Mission Planner** software is used to calibrate all hardware components and define autonomous waypoint missions. **Q Ground Control** platform handles real-time telemetry and flight path execution during deployment.
+
+---
+
+## Image Processing Pipeline
+
+### Algorithm 1 — SIFT (Scale-Invariant Feature Transform)
+
+SIFT detects and describes local image features that are invariant to scale, rotation, and illumination changes — essential for matching overlapping drone footage frames.
+
+**Key steps:**
+1. Difference of Gaussians (DoG) approximation of Laplacian of Gaussian (LoG)
+2. Keypoint localisation using Taylor series expansion for sub-pixel accuracy
+3. Hessian matrix filtering to eliminate low-contrast and edge keypoints
+4. Gradient orientation assignment for rotation invariance
+5. 128-dimensional feature descriptor generation per keypoint
+
+### Algorithm 2 — FLANN (Fast Library for Approximate Nearest Neighbours)
+
+FLANN matches keypoints between consecutive frames using randomised KD-Tree indexing, significantly reducing computational cost compared to brute-force matching.
+
+**Configuration:**
+- Index: Randomised KD-Tree (range: 1–16 trees)
+- Feature matrix dimensions: `<num_features> × <feature_dimensionality>`
+- Minimum match threshold: 10 valid matches required for stitching
+
+### Stitching Pipeline
+
+```python
+# Pseudocode
+1. Load two consecutive frames
+2. Detect keypoints and descriptors using SIFT (kp1, kp2, des1, des2)
+3. Match descriptors using FLANN
+4. Filter matches — retain only those above minimum threshold
+5. Compute homography matrix using matched keypoints
+6. Apply perspective warp to align frames
+7. Stitch and crop to final panoramic output
+```
+
+---
+
+## Software Stack
+
+| Tool | Purpose |
+|---|---|
+| Python 3.2.4 | Core image processing language |
+| OpenCV | SIFT, FLANN, image stitching |
+| NumPy | Matrix operations |
+| Anaconda / Jupyter Notebook | Development environment |
+| Q Ground Control | Flight path planning and telemetry |
+| Mission Planner | Flight controller calibration |
+
+---
+
+## Results
+
+- Successful semi-autonomous drone flight along GPS waypoints
+- Keypoint detection and descriptor matching across overlapping frames
+- Panoramic terrain map generated by stitching consecutive video frames
+- Bird's-eye-view image output suitable for infrastructure planning and land surveys
+
+---
+
+## Limitations
+
+- Waypoint accuracy limited by GPS theoretical precision — performance degrades in adverse weather
+- Panorama code processing speed is significantly slower than real-time
+- Keypoint detection struggles in frames with large uniform sky regions and minimal horizon contrast
+- 360° lens footage produces suboptimal stitching results
+
+---
+
+## Project Timeline
+
+| Week | Activity |
+|---|---|
+| 1–2 | Literature survey |
+| 2–6 | Drone prototype development |
+| 4–8 | Testing and troubleshooting |
+| 6–10 | Image processing pipeline development |
+| 9–11 | Results evaluation and accuracy testing |
+| 11–12 | Report and presentation |
+
+---
 
 ## Applications
-- Terrain mapping and analysis
-- Road and pavement survey planning
-- Aerial surveying for infrastructure development
-- Faster and more efficient alternative to manual field surveys
 
-## Technologies Used
-- Python
-- OpenCV
-- SIFT Algorithm
-- Image Proc
+- Rural road survey and infrastructure planning
+- Agricultural land mapping
+- Disaster zone reconnaissance
+- Environmental monitoring
+- Construction site progress tracking
 
+---
+
+## Tech Stack
+
+![Python](https://img.shields.io/badge/-Python-3776AB?logo=python&logoColor=white&style=flat-square)
+![OpenCV](https://img.shields.io/badge/-OpenCV-5C3EE8?logo=opencv&logoColor=white&style=flat-square)
+![NumPy](https://img.shields.io/badge/-NumPy-013243?logo=numpy&logoColor=white&style=flat-square)
+![Jupyter](https://img.shields.io/badge/-Jupyter-F37626?logo=jupyter&logoColor=white&style=flat-square)
+
+---
+
+## Team
+
+Group project — 6 members
+B.Tech Electronics and Communication Engineering
+MS Ramaiah University of Applied Sciences, Bengaluru (2021)
+Supervised by Mrs. Vasanthavalli, Department of ECE
+
+---
+
+## References
+
+- Lowe, D. (2004). Distinctive Image Features from Scale-Invariant Keypoints. *International Journal of Computer Vision*, 60(2), 91–110.
+- Redmon, J. et al. (2016). You Only Look Once: Unified, Real-Time Object Detection. *CVPR 2016*.
+- Meier, L. et al. (2011). PIXHAWK: A System for Autonomous Flight using Onboard Computer Vision.
+- Ebeid, E. S. M. et al. (2017). A Survey on Open-Source Flight Control Platforms of Unmanned Aerial Vehicle.
